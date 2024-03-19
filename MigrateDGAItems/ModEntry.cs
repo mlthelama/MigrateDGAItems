@@ -9,8 +9,12 @@ using StardewValley.Buildings;
 using StardewValley.Internal;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Locations;
+using SObject = StardewValley.Object;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using xTile.Dimensions;
+using StardewValley.GameData.Fences;
+using System.Xml.Linq;
 
 namespace MigrateDGAItems
 {
@@ -59,15 +63,23 @@ namespace MigrateDGAItems
                 spacecore.RegisterSerializerType(typeof(CustomFruitTree));
                 spacecore.RegisterSerializerType(typeof(CustomShirt));
                 spacecore.RegisterSerializerType(typeof(CustomPants));
-                Monitor.Log("Registered subclasses with SpaceCore!", LogLevel.Alert);
+                Monitor.Log("Registered subclasses with SpaceCore!", LogLevel.Trace);
             }
         }
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
-            Game1.player.addItemByMenuIfNecessary(new CustomObject());
+            // Add a error item for debugging
+            //Game1.player.addItemByMenuIfNecessary(new CustomObject());
+
             Utility.ForEachItem(fixItem);
             Utility.ForEachLocation(l => fixTerrainFeatures(l));
+
+            // Debugging stuff to alert on furniture in the farmhouse
+            //foreach (Furniture f in Game1.getLocationFromName("Farmhouse").furniture)
+            //{
+            //    Monitor.Log($"Furniture found in farmhouse with name {f.Name}", LogLevel.Trace);
+            //}
         }
 
         private bool fixItem(Item item, Action remove, Action<Item> replaceWith)
@@ -76,67 +88,118 @@ namespace MigrateDGAItems
             if (item is CustomBasicFurniture or CustomBedFurniture or CustomFishTankFurniture or CustomStorageFurniture or CustomTVFurniture)
             {
                 // Type = (F)
-                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Debug);
-                string itemId = getBestGuess("(F)", item.Name);
-                Monitor.Log($"Replacing {item.Name} with {itemId}", LogLevel.Alert);
-                replaceWith(ItemRegistry.Create(itemId));
+                string locName = "unknown location";
+                if (((Furniture)item).Location != null && ((Furniture)item).Location.Name != null)
+                {
+                    locName = ((Furniture)item).Location.Name;
+                }
+                Monitor.Log($"Error item found with name: {item.Name} in {locName}", LogLevel.Trace);
+                string itemId = getBestItemGuess("(F)", item.Name);
+                Furniture newItem = (Furniture)ItemRegistry.Create(itemId);
+                if (item is CustomStorageFurniture or CustomFishTankFurniture && newItem is StorageFurniture)
+                {
+                    foreach (var heldThing in ((StorageFurniture)item).heldItems)
+                    {
+                        ((StorageFurniture)newItem).heldItems.Add(heldThing);
+                    }
+                }
+                Monitor.Log($"Replacing {item.Name} with {newItem.QualifiedItemId}", LogLevel.Trace);
+                replaceWith(newItem);
             }
             // If it's a DGA object
             else if (item is CustomObject)
             {
                 // Type = (O)
-                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Debug);
-                string itemId = getBestGuess("(O)",item.Name);
-                Monitor.Log($"Replacing {item.Name} with {itemId}", LogLevel.Alert);
-                replaceWith(ItemRegistry.Create(itemId));
+                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Trace);
+                string itemId = getBestItemGuess("(O)",item.Name);
+                SObject newObject = (SObject)ItemRegistry.Create(itemId);
+                Monitor.Log($"Replacing {item.Name} with {newObject.QualifiedItemId}", LogLevel.Trace);
+                replaceWith(newObject);
             }
             // If it's a DGA big craftable
             else if (item is CustomBigCraftable)
             {
                 // Type = (BC)
-                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Debug);
-                string itemId = getBestGuess("(BC)", item.Name);
-                Monitor.Log($"Replacing {item.Name} with {itemId}", LogLevel.Alert);
+                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Trace);
+                string itemId = getBestItemGuess("(BC)", item.Name);
+                Monitor.Log($"Replacing {item.Name} with {ItemRegistry.Create(itemId).QualifiedItemId}", LogLevel.Trace);
                 replaceWith(ItemRegistry.Create(itemId));
             }
             // If it's a DGA weapon
             else if (item is CustomMeleeWeapon)
             {
                 // Type = (W)
+                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Trace);
+                string itemId = getBestItemGuess("(W)", item.Name);
+                Monitor.Log($"Replacing {item.Name} with {ItemRegistry.Create(itemId).QualifiedItemId}", LogLevel.Trace);
+                replaceWith(ItemRegistry.Create(itemId));
             }
             // If it's a DGA clothing item
             else if (item is CustomPants or CustomShirt or CustomHat or CustomBoots)
             {
-                // Type = (P) for pants, (S) for shirts, (H) for hats, (B) for boots
+                // Type = (P)
+                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Trace);
+                string itemId = getBestItemGuess("(P)", item.Name);
+                Monitor.Log($"Replacing {item.Name} with {ItemRegistry.Create(itemId).QualifiedItemId}", LogLevel.Trace);
+                replaceWith(ItemRegistry.Create(itemId));
             }
-            else
+            else if (item is CustomShirt)
             {
+                // Type = (S)
+                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Trace);
+                string itemId = getBestItemGuess("(S)", item.Name);
+                Monitor.Log($"Replacing {item.Name} with {ItemRegistry.Create(itemId).QualifiedItemId}", LogLevel.Trace);
+                replaceWith(ItemRegistry.Create(itemId));
+            }
+            else if (item is CustomHat)
+            {
+                // Type = (H)
+                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Trace);
+                string itemId = getBestItemGuess("(H)", item.Name);
+                Monitor.Log($"Replacing {item.Name} with {ItemRegistry.Create(itemId).QualifiedItemId}", LogLevel.Trace);
+                replaceWith(ItemRegistry.Create(itemId));
+            }
+            else if (item is CustomBoots)
+            {
+                // Type = (B)
+                Monitor.Log($"Error item found with name: {item.Name}", LogLevel.Trace);
+                string itemId = getBestItemGuess("(B)", item.Name);
+                Monitor.Log($"Replacing {item.Name} with {ItemRegistry.Create(itemId).QualifiedItemId}", LogLevel.Trace);
+                replaceWith(ItemRegistry.Create(itemId));
             }
             return true;
         }
 
         private bool fixTerrainFeatures(GameLocation l)
         {
-            foreach (KeyValuePair<Vector2, StardewValley.Object> pair in l.objects.Pairs)
+            Dictionary<Vector2, SObject> fencesToAdd = new();
+            Dictionary<Vector2, SObject> fencesToRemove = new();
+            foreach (KeyValuePair<Vector2, SObject> pair in l.objects.Pairs)
             {
                 if (pair.Value is CustomFence)
                 {
                     // Fix the fence
+                    fencesToRemove.Add(pair.Key, pair.Value);
+                    string bestGuessId = getBestFenceGuess(((CustomFence)pair.Value).Name);
+                    Fence newFence = new Fence(((CustomFence)pair.Value).TileLocation, bestGuessId, ((CustomFence)pair.Value).isGate);
+                    fencesToAdd.Add(pair.Key, newFence);
                 }
             }
-            foreach (TerrainFeature terrain in l.terrainFeatures.Values)
+            Dictionary<Vector2, TerrainFeature> terrainFeaturesToAdd = new();
+            Dictionary<Vector2, TerrainFeature> terrainFeaturesToRemove = new();
+            foreach (KeyValuePair<Vector2, TerrainFeature> pair in l.terrainFeatures.Pairs)
             {
-                if (terrain is CustomFruitTree)
+                if (pair.Value is CustomFruitTree)
                 {
                     // Replace the fruit tree properly
                 }
-                else if (terrain is CustomGiantCrop)
+                else if (pair.Value is CustomGiantCrop)
                 {
                     // Replace the custom giant crop properly
                 }
-                else if (terrain is HoeDirt)
+                else if (pair.Value is HoeDirt)
                 {
-                    HoeDirt hoeDirt = (HoeDirt)terrain;
+                    HoeDirt hoeDirt = (HoeDirt)pair.Value;
                     if (hoeDirt.crop is not null && hoeDirt.crop is CustomCrop)
                     {
                         // replace the crop properly!
@@ -146,7 +209,7 @@ namespace MigrateDGAItems
             return true;
         }
 
-        private string getBestGuess(string type, string itemName)
+        private string getBestItemGuess(string type, string itemName)
         {
             // Do some fancy string splitting on the item's name, assuming DGA formatting
             string name = itemName.Split("/").Last();
@@ -195,7 +258,6 @@ namespace MigrateDGAItems
             string fuzzyResult = Utility.fuzzySearch(itemName, allItems.Keys);
             if (fuzzyResult is not null)
             {
-                Monitor.Log($"First guess is {fuzzyResult}", LogLevel.Debug);
                 return allItems[fuzzyResult];
             }
 
@@ -203,7 +265,6 @@ namespace MigrateDGAItems
             fuzzyResult = Utility.fuzzySearch(packName + "_" + name, allItems.Keys);
             if (fuzzyResult is not null)
             {
-                Monitor.Log($"Second guess is {fuzzyResult}", LogLevel.Debug);
                 return allItems[fuzzyResult];
             }
 
@@ -211,7 +272,6 @@ namespace MigrateDGAItems
             fuzzyResult = Utility.fuzzySearch(packName + "." + name, allItems.Keys);
             if (fuzzyResult is not null)
             {
-                Monitor.Log($"Third guess is {fuzzyResult}", LogLevel.Debug);
                 return allItems[fuzzyResult];
             }
 
@@ -219,7 +279,6 @@ namespace MigrateDGAItems
             fuzzyResult = Utility.fuzzySearch(packNameWithoutDGA + "_" + name, allItems.Keys);
             if (fuzzyResult is not null)
             {
-                Monitor.Log($"Fourth guess is {fuzzyResult}", LogLevel.Debug);
                 return allItems[fuzzyResult];
             }
 
@@ -227,19 +286,70 @@ namespace MigrateDGAItems
             fuzzyResult = Utility.fuzzySearch(packNameWithoutDGA + "." + name, allItems.Keys);
             if (fuzzyResult is not null)
             {
-                Monitor.Log($"Fifth guess is {fuzzyResult}", LogLevel.Debug);
                 return allItems[fuzzyResult];
             }
 
-            //Try the crazy option of searching for the bare item name(probably makes bad things happen!)
-            //fuzzyResult = Utility.fuzzySearch(name, allItems.Keys);
-            //if (fuzzyResult is not null)
-            //{
-            //    Monitor.Log($"First guess is {fuzzyResult}", LogLevel.Debug);
-            //    return allItems[fuzzyResult];
-            //}
+            return type + itemName;
+        }
 
-            return type + "-1";
+        private string getBestFenceGuess(string originalName)
+        {
+            // Do some fancy string splitting on the item's name, assuming DGA formatting
+            string name = originalName.Split("/").Last();
+            string packName = originalName.Split("/").First();
+            string packNameWithoutDGA = packName.Split(".").First() + packName.Split(".").Last();
+
+            if (Fence.TryGetData(originalName, out _))
+            {
+                return originalName;
+            }
+            else if (Fence.TryGetData(packName + "_" + name, out _))
+            {
+                return packName + "_" + name;
+            }
+            else if (Fence.TryGetData(packName + "_" + name, out _))
+            {
+                return packName + "." + name;
+            }
+            else if (Fence.TryGetData(packName + "_" + name, out _))
+            {
+                return packNameWithoutDGA + "_" + name;
+            }
+            else if (Fence.TryGetData(packName + "_" + name, out _))
+            {
+                return packNameWithoutDGA + "." + name;
+            }
+            return "-1";
+        }
+
+        private string getBestFruitTreeGuess(string originalName)
+        {
+            // Do some fancy string splitting on the item's name, assuming DGA formatting
+            string name = originalName.Split("/").Last();
+            string packName = originalName.Split("/").First();
+            string packNameWithoutDGA = packName.Split(".").First() + packName.Split(".").Last();
+
+            if (FruitTree.TryGetData(originalName, out _))
+            {
+                return originalName;
+            }
+            else if (FruitTree.TryGetData(packName + "_" + name, out _))
+            {
+                return packName + "_" + name;
+            }
+            else if (FruitTree.TryGetData(packName + "_" + name, out _))
+            {
+                return packName + "." + name;
+            }
+            else if (FruitTree.TryGetData(packName + "_" + name, out _))
+            {
+                return packNameWithoutDGA + "_" + name;
+            }
+            else if (FruitTree.TryGetData(packName + "_" + name, out _))
+            {
+                return packNameWithoutDGA + "." + name;
+            }
+            return "-1";
         }
     }
 }
