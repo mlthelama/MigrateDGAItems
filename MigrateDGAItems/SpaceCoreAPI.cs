@@ -1,8 +1,7 @@
-﻿namespace MigrateDGAItems
+﻿namespace MigrateDGAItems;
+
+public interface ISpaceCoreApi
 {
-    public interface ISpaceCoreApi
-    {
-        /// Must have [XmlType("Mods_SOMETHINGHERE")] attribute (required to start with "Mods_")
-        void RegisterSerializerType(Type type);
-    }
+    /// Must have [XmlType("Mods_SOMETHINGHERE")] attribute (required to start with "Mods_")
+    void RegisterSerializerType(Type type);
 }

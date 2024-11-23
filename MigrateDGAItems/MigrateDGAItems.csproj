@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.1.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="DGAClasses\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DGAClasses\" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <GamePath>E:\my_stardew_mod\MO_SDV_1.6\stock_game</GamePath>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Remove="DGAClasses\"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="DGAClasses\"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.2"/>
+    </ItemGroup>
 </Project>
